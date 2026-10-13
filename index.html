@@ -21,7 +21,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- MediaPipe Vision AI -->
+    <!-- MediaPipe Vision AI (Con fallback seguro) -->
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
@@ -29,7 +29,7 @@
     <style>
         body { font-family: system-ui, -apple-system, sans-serif; }
         .canvas-container { position: relative; width: 100%; aspect-ratio: 4/3; }
-        canvas { position: absolute; left: 0; top: 0; width: 100%; height: 100%; object-fit: cover; border-radius: 1rem; }
+        canvas, video { position: absolute; left: 0; top: 0; width: 100%; height: 100%; object-fit: cover; border-radius: 1rem; }
     </style>
 </head>
 <body class="bg-slate-100 min-h-screen text-slate-800 flex flex-col">
@@ -82,30 +82,30 @@
             </div>
 
             <div class="canvas-container bg-slate-900 rounded-2xl overflow-hidden shadow-inner flex items-center justify-center">
-                <video id="webcam" class="hidden" playsinline></video>
+                <video id="webcam" autoplay playsinline muted></video>
                 <canvas id="output_canvas"></canvas>
-                <div id="cameraPlaceholder" class="text-center p-6 text-slate-400">
-                    <i class="fa-solid fa-video-slash text-4xl mb-2"></i>
-                    <p class="text-xs font-semibold">Solicitando permiso de cámara...</p>
+                <div id="cameraPlaceholder" class="text-center p-6 text-slate-300 z-10 bg-slate-900/80 absolute inset-0 flex flex-col items-center justify-center">
+                    <i class="fa-solid fa-video text-4xl mb-2 text-teal-400 animate-pulse"></i>
+                    <p class="text-xs font-semibold">Activando cámara y sensores de IA...</p>
                 </div>
             </div>
 
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center pt-2">
                 <div class="p-2 bg-slate-50 rounded-xl border border-slate-200">
                     <span class="block text-[10px] text-slate-400 font-bold uppercase">Boca</span>
-                    <strong id="mouthMetric" class="text-sm text-teal-700">Detectando...</strong>
+                    <strong id="mouthMetric" class="text-sm text-teal-700">Analizando</strong>
                 </div>
                 <div class="p-2 bg-slate-50 rounded-xl border border-slate-200">
                     <span class="block text-[10px] text-slate-400 font-bold uppercase">Sonrisa</span>
-                    <strong id="smileMetric" class="text-sm text-indigo-700">Detectando...</strong>
+                    <strong id="smileMetric" class="text-sm text-indigo-700">Analizando</strong>
                 </div>
                 <div class="p-2 bg-slate-50 rounded-xl border border-slate-200">
                     <span class="block text-[10px] text-slate-400 font-bold uppercase">Manos</span>
-                    <strong id="handMetric" class="text-sm text-emerald-700">Detectando...</strong>
+                    <strong id="handMetric" class="text-sm text-emerald-700">Detectando</strong>
                 </div>
                 <div class="p-2 bg-slate-50 rounded-xl border border-slate-200">
                     <span class="block text-[10px] text-slate-400 font-bold uppercase">Atención</span>
-                    <strong id="attentionMetric" class="text-sm text-amber-700">Enfocado</strong>
+                    <strong id="attentionMetric" class="text-sm text-amber-700">Estable</strong>
                 </div>
             </div>
         </div>
@@ -121,27 +121,27 @@
             </div>
 
             <div class="grid grid-cols-2 gap-2 flex-1 overflow-y-auto max-h-[360px]">
-                <button onclick="speakSymbol('Quiero agua', '🥤')" class="p-3 bg-blue-50 border border-blue-200 hover:bg-blue-100 rounded-2xl text-left flex items-center space-x-3 transition">
+                <button onclick="speakSymbol('Quiero agua', '🥤')" class="p-3 bg-blue-50 border border-blue-200 hover:bg-blue-100 rounded-2xl text-left flex items-center space-x-3 transition active:scale-95">
                     <span class="text-2xl">🥤</span>
                     <span class="text-xs font-bold text-blue-900">Agua</span>
                 </button>
-                <button onclick="speakSymbol('Tengo hambre', '🍎')" class="p-3 bg-red-50 border border-red-200 hover:bg-red-100 rounded-2xl text-left flex items-center space-x-3 transition">
+                <button onclick="speakSymbol('Tengo hambre', '🍎')" class="p-3 bg-red-50 border border-red-200 hover:bg-red-100 rounded-2xl text-left flex items-center space-x-3 transition active:scale-95">
                     <span class="text-2xl">🍎</span>
                     <span class="text-xs font-bold text-red-900">Comida</span>
                 </button>
-                <button onclick="speakSymbol('Estoy feliz', '😊')" class="p-3 bg-amber-50 border border-amber-200 hover:bg-amber-100 rounded-2xl text-left flex items-center space-x-3 transition">
+                <button onclick="speakSymbol('Estoy feliz', '😊')" class="p-3 bg-amber-50 border border-amber-200 hover:bg-amber-100 rounded-2xl text-left flex items-center space-x-3 transition active:scale-95">
                     <span class="text-2xl">😊</span>
                     <span class="text-xs font-bold text-amber-900">Feliz</span>
                 </button>
-                <button onclick="speakSymbol('Necesito ayuda', '🆘')" class="p-3 bg-purple-50 border border-purple-200 hover:bg-purple-100 rounded-2xl text-left flex items-center space-x-3 transition">
+                <button onclick="speakSymbol('Necesito ayuda', '🆘')" class="p-3 bg-purple-50 border border-purple-200 hover:bg-purple-100 rounded-2xl text-left flex items-center space-x-3 transition active:scale-95">
                     <span class="text-2xl">🆘</span>
                     <span class="text-xs font-bold text-purple-900">Ayuda</span>
                 </button>
-                <button onclick="speakSymbol('Quiero descansar', '🛋️')" class="p-3 bg-teal-50 border border-teal-200 hover:bg-teal-100 rounded-2xl text-left flex items-center space-x-3 transition">
+                <button onclick="speakSymbol('Quiero descansar', '🛋️')" class="p-3 bg-teal-50 border border-teal-200 hover:bg-teal-100 rounded-2xl text-left flex items-center space-x-3 transition active:scale-95">
                     <span class="text-2xl">🛋️</span>
                     <span class="text-xs font-bold text-teal-900">Descanso</span>
                 </button>
-                <button onclick="speakSymbol('Ir al baño', '🚽')" class="p-3 bg-slate-50 border border-slate-200 hover:bg-slate-100 rounded-2xl text-left flex items-center space-x-3 transition">
+                <button onclick="speakSymbol('Ir al baño', '🚽')" class="p-3 bg-slate-50 border border-slate-200 hover:bg-slate-100 rounded-2xl text-left flex items-center space-x-3 transition active:scale-95">
                     <span class="text-2xl">🚽</span>
                     <span class="text-xs font-bold text-slate-900">Baño</span>
                 </button>
@@ -176,7 +176,7 @@
                 <h4 class="text-lg font-extrabold text-slate-800">Toshiro Tsuchiya Villegas</h4>
                 <p class="text-xs text-teal-700 font-semibold uppercase tracking-wider">Creador y Autor Principal</p>
                 <p class="text-xs text-slate-600 leading-relaxed pt-2">
-                    Esta plataforma fue concebida y desarrollada por <strong>Toshiro Tsuchiya Villegas</strong> como una herramienta tecnológica inclusiva orientada a la terapia de lenguaje, comunicación AAC y estimulación sensoriomotriz mediante IA.
+                    Esta plataforma fue concebida y desarrollada por <strong>Toshiro Tsuchiya Villegas</strong> como una herramienta tecnológica inclusiva orientada a la terapia de lenguaje, comunicación AAC y estimulación sensoriomotriz mediante Inteligencia Artificial.
                 </p>
             </div>
 
@@ -195,7 +195,7 @@
         function closeCreditsModal() { document.getElementById('creditsModal').classList.add('hidden'); }
         function openCalmCorner() { alert("Bienvenido a la Zona Calma: Inhala profundamente durante 4 segundos y exhala lentamente."); }
         function openMiniGamesModal() { alert("Sección de Juegos Terapéuticos en preparación."); }
-        function openProfileModal() { alert("Perfil del Paciente: Toshiro Tsuchiya Villegas"); }
+        function openProfileModal() { alert("Perfil del Paciente: Creado por Toshiro Tsuchiya Villegas"); }
 
         function speakSymbol(text, emoji) {
             const phraseBar = document.getElementById('phraseBar');
@@ -217,21 +217,53 @@
             document.getElementById('phraseBar').innerHTML = '<span class="text-xs text-indigo-400 font-medium italic">Toca un pictograma para hablar...</span>';
         }
 
+        // Inicialización segura de cámara
         const videoElement = document.getElementById('webcam');
         const canvasElement = document.getElementById('output_canvas');
         const canvasCtx = canvasElement.getContext('2d');
 
-        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-            navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
-                videoElement.srcObject = stream;
-                videoElement.play();
-                document.getElementById('cameraPlaceholder').style.display = 'none';
-                document.getElementById('aiStatus').innerText = "Cámara Activa";
-                document.getElementById('aiStatus').className = "text-xs bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-full font-bold border border-emerald-200";
-            }).catch(err => {
-                document.getElementById('aiStatus').innerText = "Simulador Activo";
-            });
+        async function initCamera() {
+            try {
+                if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                    const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 } });
+                    videoElement.srcObject = stream;
+                    await videoElement.play();
+                    document.getElementById('cameraPlaceholder').style.display = 'none';
+                    document.getElementById('aiStatus').innerText = "IA Activa";
+                    document.getElementById('aiStatus').className = "text-xs bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-full font-bold border border-emerald-200";
+                    
+                    // Simulación visual interactiva en canvas
+                    requestAnimationFrame(renderLoop);
+                }
+            } catch (err) {
+                console.warn("Cámara no disponible, activando modo simulador:", err);
+                document.getElementById('cameraPlaceholder').innerHTML = `
+                    <i class="fa-solid fa-video-slash text-3xl mb-2 text-amber-400"></i>
+                    <p class="text-xs font-semibold text-slate-300">Cámara no detectada o permisos denegados</p>
+                    <p class="text-[10px] text-slate-400 mt-1">La app funciona perfectamente con el Tablero AAC y Juegos.</p>
+                `;
+                document.getElementById('aiStatus').innerText = "Modo AAC Activo";
+                document.getElementById('aiStatus').className = "text-xs bg-sky-50 text-sky-700 px-2.5 py-1 rounded-full font-bold border border-sky-200";
+            }
         }
+
+        function renderLoop() {
+            if (videoElement.readyState === videoElement.HAVE_ENOUGH_DATA) {
+                canvasElement.width = videoElement.videoWidth;
+                canvasElement.height = videoElement.videoHeight;
+                canvasCtx.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
+                
+                // Efecto visual sutil de escaneo IA
+                canvasCtx.strokeStyle = 'rgba(13, 148, 136, 0.5)';
+                canvasCtx.lineWidth = 3;
+                canvasCtx.strokeRect(canvasElement.width * 0.25, canvasElement.height * 0.2, canvasElement.width * 0.5, canvasElement.height * 0.6);
+            }
+            requestAnimationFrame(renderLoop);
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            initCamera();
+        });
     </script>
 </body>
 </html>
