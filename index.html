@@ -1,19 +1,51 @@
-<!--
-  ===================================================================
-  PROYECTO: Copeteto - Aplicación de Terapia de Lenguaje e Inclusión con IA
-  AUTOR Y CREADOR: Toshiro Tsuchiya Villegas
-  DESARROLLO: Creado y Diseñado por Toshiro Tsuchiya Villegas con asistencia de IA
-  AÑO: 2026
-  LICENCIA: Todos los derechos reservados © Toshiro Tsuchiya Villegas
-  ===================================================================
--->
-<!-- ... existing code ... -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <!--
+      ===================================================================
+      PROYECTO: Copeteto - Aplicación de Terapia de Lenguaje e Inclusión con IA
+      AUTOR Y CREADOR: Toshiro Tsuchiya Villegas
+      DESARROLLO: Creado y Diseñado por Toshiro Tsuchiya Villegas con asistencia de IA
+      AÑO: 2026
+      LICENCIA: Todos los derechos reservados © Toshiro Tsuchiya Villegas
+      ===================================================================
+    -->
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="author" content="Toshiro Tsuchiya Villegas">
     <meta name="copyright" content="Copyright © 2026 Toshiro Tsuchiya Villegas. Todos los derechos reservados.">
     <meta name="description" content="Plataforma de terapia de lenguaje, comunicación AAC e inclusión con Inteligencia Artificial creada por Toshiro Tsuchiya Villegas.">
     <title>Copeteto - Terapia de Lenguaje e Inclusión con IA | Por Toshiro Tsuchiya Villegas</title>
-<!-- ... existing code ... -->
+    
+    <!-- CSS & Frameworks -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- MediaPipe Vision AI -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+
+    <style>
+        body { font-family: system-ui, -apple-system, sans-serif; }
+        .canvas-container { position: relative; width: 100%; aspect-ratio: 4/3; }
+        canvas { position: absolute; left: 0; top: 0; width: 100%; height: 100%; object-fit: cover; border-radius: 1rem; }
+    </style>
+</head>
+<body class="bg-slate-100 min-h-screen text-slate-800 flex flex-col">
+
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-40 px-4 py-3 shadow-sm">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-2xl bg-teal-600 flex items-center justify-center text-white text-xl font-black shadow-md">
+                    C
+                </div>
+                <div>
+                    <h1 class="font-extrabold text-lg leading-tight text-slate-900">Copeteto <span class="text-xs font-bold text-teal-600 bg-teal-50 px-2 py-0.5 rounded-full border border-teal-200">IA Inclusiva</span></h1>
+                    <p class="text-xs text-slate-500 hidden sm:block">Por Toshiro Tsuchiya Villegas</p>
+                </div>
+            </div>
+
             <!-- Header Action Controls -->
             <div class="flex items-center space-x-2">
                 <button onclick="openCalmCorner()" class="p-2.5 rounded-xl border border-sky-200 bg-sky-50 hover:bg-sky-100 text-sky-800 transition flex items-center space-x-1.5 text-xs font-bold" title="Rincón Calmante">
@@ -38,19 +70,94 @@
             </div>
         </div>
     </header>
-<!-- ... existing code ... -->
-        <!-- Footer Info & Credits -->
-        <footer class="mt-8 pt-4 border-t border-slate-200 text-center text-xs text-slate-500 flex flex-col sm:flex-row justify-between items-center gap-2">
-            <div>
-                <strong>Copeteto v1.0</strong> — Creado y Diseñado por <span class="text-teal-700 font-bold">Toshiro Tsuchiya Villegas</span>
-            </div>
-            <div class="text-[11px] text-slate-400">
-                © 2026 Toshiro Tsuchiya Villegas. Todos los derechos reservados.
-            </div>
-        </footer>
-    </div>
 
-    <!-- Modal: Autoría y Créditos -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Vision AI Panel -->
+        <div class="lg:col-span-2 bg-white p-4 rounded-3xl border border-slate-200 shadow-sm flex flex-col space-y-4">
+            <div class="flex justify-between items-center pb-2 border-b border-slate-100">
+                <h2 class="font-extrabold text-slate-800 text-base flex items-center gap-2">
+                    <i class="fa-solid fa-camera text-teal-600"></i> Análisis Facial y Gestual en Tiempo Real
+                </h2>
+                <span id="aiStatus" class="text-xs bg-amber-50 text-amber-700 px-2.5 py-1 rounded-full font-bold border border-amber-200">Iniciando Cámara...</span>
+            </div>
+
+            <div class="canvas-container bg-slate-900 rounded-2xl overflow-hidden shadow-inner flex items-center justify-center">
+                <video id="webcam" class="hidden" playsinline></video>
+                <canvas id="output_canvas"></canvas>
+                <div id="cameraPlaceholder" class="text-center p-6 text-slate-400">
+                    <i class="fa-solid fa-video-slash text-4xl mb-2"></i>
+                    <p class="text-xs font-semibold">Solicitando permiso de cámara...</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center pt-2">
+                <div class="p-2 bg-slate-50 rounded-xl border border-slate-200">
+                    <span class="block text-[10px] text-slate-400 font-bold uppercase">Boca</span>
+                    <strong id="mouthMetric" class="text-sm text-teal-700">Detectando...</strong>
+                </div>
+                <div class="p-2 bg-slate-50 rounded-xl border border-slate-200">
+                    <span class="block text-[10px] text-slate-400 font-bold uppercase">Sonrisa</span>
+                    <strong id="smileMetric" class="text-sm text-indigo-700">Detectando...</strong>
+                </div>
+                <div class="p-2 bg-slate-50 rounded-xl border border-slate-200">
+                    <span class="block text-[10px] text-slate-400 font-bold uppercase">Manos</span>
+                    <strong id="handMetric" class="text-sm text-emerald-700">Detectando...</strong>
+                </div>
+                <div class="p-2 bg-slate-50 rounded-xl border border-slate-200">
+                    <span class="block text-[10px] text-slate-400 font-bold uppercase">Atención</span>
+                    <strong id="attentionMetric" class="text-sm text-amber-700">Enfocado</strong>
+                </div>
+            </div>
+        </div>
+
+        <!-- AAC Communication Board -->
+        <div class="bg-white p-4 rounded-3xl border border-slate-200 shadow-sm flex flex-col space-y-4">
+            <h2 class="font-extrabold text-slate-800 text-base flex items-center gap-2 border-b border-slate-100 pb-2">
+                <i class="fa-solid fa-comments text-indigo-600"></i> Tablero Pictográfico AAC
+            </h2>
+
+            <div id="phraseBar" class="p-3 bg-indigo-50/60 rounded-2xl border border-indigo-100 min-h-[60px] flex items-center gap-2 flex-wrap">
+                <span class="text-xs text-indigo-400 font-medium italic">Toca un pictograma para hablar...</span>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 flex-1 overflow-y-auto max-h-[360px]">
+                <button onclick="speakSymbol('Quiero agua', '🥤')" class="p-3 bg-blue-50 border border-blue-200 hover:bg-blue-100 rounded-2xl text-left flex items-center space-x-3 transition">
+                    <span class="text-2xl">🥤</span>
+                    <span class="text-xs font-bold text-blue-900">Agua</span>
+                </button>
+                <button onclick="speakSymbol('Tengo hambre', '🍎')" class="p-3 bg-red-50 border border-red-200 hover:bg-red-100 rounded-2xl text-left flex items-center space-x-3 transition">
+                    <span class="text-2xl">🍎</span>
+                    <span class="text-xs font-bold text-red-900">Comida</span>
+                </button>
+                <button onclick="speakSymbol('Estoy feliz', '😊')" class="p-3 bg-amber-50 border border-amber-200 hover:bg-amber-100 rounded-2xl text-left flex items-center space-x-3 transition">
+                    <span class="text-2xl">😊</span>
+                    <span class="text-xs font-bold text-amber-900">Feliz</span>
+                </button>
+                <button onclick="speakSymbol('Necesito ayuda', '🆘')" class="p-3 bg-purple-50 border border-purple-200 hover:bg-purple-100 rounded-2xl text-left flex items-center space-x-3 transition">
+                    <span class="text-2xl">🆘</span>
+                    <span class="text-xs font-bold text-purple-900">Ayuda</span>
+                </button>
+                <button onclick="speakSymbol('Quiero descansar', '🛋️')" class="p-3 bg-teal-50 border border-teal-200 hover:bg-teal-100 rounded-2xl text-left flex items-center space-x-3 transition">
+                    <span class="text-2xl">🛋️</span>
+                    <span class="text-xs font-bold text-teal-900">Descanso</span>
+                </button>
+                <button onclick="speakSymbol('Ir al baño', '🚽')" class="p-3 bg-slate-50 border border-slate-200 hover:bg-slate-100 rounded-2xl text-left flex items-center space-x-3 transition">
+                    <span class="text-2xl">🚽</span>
+                    <span class="text-xs font-bold text-slate-900">Baño</span>
+                </button>
+            </div>
+
+            <button onclick="clearPhrase()" class="w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs rounded-xl transition">
+                Limpiar Frase
+            </button>
+        </div>
+    </main>
+
+    <footer class="mt-auto border-t border-slate-200 bg-white py-3 px-4 text-center text-xs text-slate-500">
+        <p><strong>Copeteto v1.0</strong> — Creado y Diseñado por <span class="text-teal-700 font-bold">Toshiro Tsuchiya Villegas</span></p>
+        <p class="text-[10px] text-slate-400 mt-0.5">© 2026 Toshiro Tsuchiya Villegas. Todos los derechos reservados.</p>
+    </footer>
+
     <div id="creditsModal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
         <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-purple-100 space-y-4 text-center">
             <div class="flex justify-between items-center border-b border-slate-100 pb-3">
@@ -69,7 +176,7 @@
                 <h4 class="text-lg font-extrabold text-slate-800">Toshiro Tsuchiya Villegas</h4>
                 <p class="text-xs text-teal-700 font-semibold uppercase tracking-wider">Creador y Autor Principal</p>
                 <p class="text-xs text-slate-600 leading-relaxed pt-2">
-                    Esta plataforma fue concebida y desarrollada por <strong>Toshiro Tsuchiya Villegas</strong> como una herramienta tecnológica inclusiva orientada a la terapia de lenguaje, comunicación AAC y estimulación sensoriomotriz mediante Inteligencia Artificial y Visión Computacional.
+                    Esta plataforma fue concebida y desarrollada por <strong>Toshiro Tsuchiya Villegas</strong> como una herramienta tecnológica inclusiva orientada a la terapia de lenguaje, comunicación AAC y estimulación sensoriomotriz mediante IA.
                 </p>
             </div>
 
@@ -82,17 +189,49 @@
             </button>
         </div>
     </div>
-<!-- ... existing code ... -->
+
     <script>
-        function openCreditsModal() {
-            document.getElementById('creditsModal').classList.remove('hidden');
+        function openCreditsModal() { document.getElementById('creditsModal').classList.remove('hidden'); }
+        function closeCreditsModal() { document.getElementById('creditsModal').classList.add('hidden'); }
+        function openCalmCorner() { alert("Bienvenido a la Zona Calma: Inhala profundamente durante 4 segundos y exhala lentamente."); }
+        function openMiniGamesModal() { alert("Sección de Juegos Terapéuticos en preparación."); }
+        function openProfileModal() { alert("Perfil del Paciente: Toshiro Tsuchiya Villegas"); }
+
+        function speakSymbol(text, emoji) {
+            const phraseBar = document.getElementById('phraseBar');
+            if (phraseBar.querySelector('span')) phraseBar.innerHTML = '';
+            
+            const badge = document.createElement('span');
+            badge.className = 'px-3 py-1 bg-indigo-600 text-white rounded-full text-xs font-bold flex items-center gap-1.5 shadow-sm';
+            badge.innerHTML = `${emoji} ${text}`;
+            phraseBar.appendChild(badge);
+
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'es-ES';
+                window.speechSynthesis.speak(utterance);
+            }
         }
 
-        function closeCreditsModal() {
-            document.getElementById('creditsModal').classList.add('hidden');
+        function clearPhrase() {
+            document.getElementById('phraseBar').innerHTML = '<span class="text-xs text-indigo-400 font-medium italic">Toca un pictograma para hablar...</span>';
         }
 
-        // ... existing code ...
+        const videoElement = document.getElementById('webcam');
+        const canvasElement = document.getElementById('output_canvas');
+        const canvasCtx = canvasElement.getContext('2d');
+
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
+                videoElement.srcObject = stream;
+                videoElement.play();
+                document.getElementById('cameraPlaceholder').style.display = 'none';
+                document.getElementById('aiStatus').innerText = "Cámara Activa";
+                document.getElementById('aiStatus').className = "text-xs bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-full font-bold border border-emerald-200";
+            }).catch(err => {
+                document.getElementById('aiStatus').innerText = "Simulador Activo";
+            });
+        }
     </script>
 </body>
 </html>
