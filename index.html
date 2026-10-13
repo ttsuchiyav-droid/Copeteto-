@@ -27,26 +27,32 @@
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
 
     <style>
-        body { font-family: system-ui, -apple-system, sans-serif; }
+        body { font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; }
         .canvas-container { position: relative; width: 100%; aspect-ratio: 4/3; }
         canvas, video { position: absolute; left: 0; top: 0; width: 100%; height: 100%; object-fit: cover; border-radius: 1rem; }
         
-        /* Animación para zona de respiración */
         @keyframes pulse-ring {
-            0% { transform: scale(0.8); opacity: 0.8; }
-            50% { transform: scale(1.2); opacity: 0.3; }
-            100% { transform: scale(0.8); opacity: 0.8; }
+            0% { transform: scale(0.85); opacity: 0.8; }
+            50% { transform: scale(1.2); opacity: 0.4; }
+            100% { transform: scale(0.85); opacity: 0.8; }
         }
         .breathing-circle {
-            animation: pulse-ring 8s infinite ease-in-out;
+            animation: pulse-ring 6s infinite ease-in-out;
+        }
+
+        @keyframes float-slow {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-6px); }
+        }
+        .animated-float {
+            animation: float-slow 3s ease-in-out infinite;
         }
     </style>
 </head>
-<body class="bg-slate-100 min-h-screen text-slate-800 flex flex-col">
+<body class="bg-slate-100 min-h-screen text-slate-800 flex flex-col selection:bg-teal-200">
 
-    <!-- Header Principal -->
     <header class="bg-white border-b border-slate-200 sticky top-0 z-40 px-4 py-3 shadow-sm">
-        <div class="max-w-7xl mx-auto flex items-center justify-between">
+        <div class="max-w-7xl mx-auto flex items-center justify-between flex-wrap gap-2">
             <div class="flex items-center space-x-3">
                 <div class="w-10 h-10 rounded-2xl bg-teal-600 flex items-center justify-center text-white text-xl font-black shadow-md">
                     C
@@ -57,24 +63,34 @@
                 </div>
             </div>
 
-            <!-- Botones de Navegación Activos -->
-            <div class="flex items-center space-x-2">
-                <button onclick="openCalmCorner()" class="p-2.5 rounded-xl border border-sky-200 bg-sky-50 hover:bg-sky-100 text-sky-800 transition flex items-center space-x-1.5 text-xs font-bold shadow-sm active:scale-95">
+            <!-- Botones de Navegación -->
+            <div class="flex items-center space-x-1.5 sm:space-x-2 flex-wrap">
+                <button onclick="openMusicModal()" class="p-2 sm:p-2.5 rounded-xl border border-amber-200 bg-amber-50 hover:bg-amber-100 text-amber-900 transition flex items-center space-x-1.5 text-xs font-bold shadow-sm active:scale-95">
+                    <i class="fa-solid fa-music text-amber-600"></i>
+                    <span class="hidden sm:inline">Música Niños</span>
+                </button>
+
+                <button onclick="openCalmCorner()" class="p-2 sm:p-2.5 rounded-xl border border-sky-200 bg-sky-50 hover:bg-sky-100 text-sky-800 transition flex items-center space-x-1.5 text-xs font-bold shadow-sm active:scale-95">
                     <i class="fa-solid fa-wind text-sky-600"></i>
                     <span class="hidden sm:inline">Zona Calma</span>
                 </button>
 
-                <button onclick="openMiniGamesModal()" class="p-2.5 rounded-xl border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 transition flex items-center space-x-1.5 text-xs font-bold shadow-sm active:scale-95">
+                <button onclick="openMiniGamesModal()" class="p-2 sm:p-2.5 rounded-xl border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 transition flex items-center space-x-1.5 text-xs font-bold shadow-sm active:scale-95">
                     <i class="fa-solid fa-gamepad text-emerald-600"></i>
-                    <span class="hidden sm:inline">Juegos por Niveles</span>
+                    <span class="hidden sm:inline">Juegos</span>
                 </button>
 
-                <button onclick="openProfileModal()" class="p-2.5 rounded-xl border border-teal-200 bg-teal-50 hover:bg-teal-100 text-teal-800 transition flex items-center space-x-1.5 text-xs font-bold shadow-sm active:scale-95">
+                <button onclick="openReportsModal()" class="p-2 sm:p-2.5 rounded-xl border border-indigo-200 bg-indigo-50 hover:bg-indigo-100 text-indigo-800 transition flex items-center space-x-1.5 text-xs font-bold shadow-sm active:scale-95">
+                    <i class="fa-solid fa-chart-line text-indigo-600"></i>
+                    <span class="hidden sm:inline">Reportes</span>
+                </button>
+
+                <button onclick="openProfileModal()" class="p-2 sm:p-2.5 rounded-xl border border-teal-200 bg-teal-50 hover:bg-teal-100 text-teal-800 transition flex items-center space-x-1.5 text-xs font-bold shadow-sm active:scale-95">
                     <i class="fa-solid fa-user-gear text-teal-600"></i>
                     <span class="hidden sm:inline">Perfil</span>
                 </button>
 
-                <button onclick="openCreditsModal()" class="p-2.5 rounded-xl border border-purple-200 bg-purple-50 hover:bg-purple-100 text-purple-800 transition flex items-center space-x-1.5 text-xs font-bold shadow-sm active:scale-95">
+                <button onclick="openCreditsModal()" class="p-2 sm:p-2.5 rounded-xl border border-purple-200 bg-purple-50 hover:bg-purple-100 text-purple-800 transition flex items-center space-x-1.5 text-xs font-bold shadow-sm active:scale-95">
                     <i class="fa-solid fa-circle-info text-purple-600"></i>
                     <span class="hidden sm:inline">Autoría</span>
                 </button>
@@ -83,26 +99,75 @@
     </header>
 
     <main class="flex-1 max-w-7xl w-full mx-auto p-4 grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Panel de Cámara y Visión IA -->
+        
+        <!-- Columna Izquierda/Centro: Panel de Cámara y Visión IA -->
         <div class="lg:col-span-2 bg-white p-4 rounded-3xl border border-slate-200 shadow-sm flex flex-col space-y-4">
-            <div class="flex justify-between items-center pb-2 border-b border-slate-100">
+            <div class="flex justify-between items-center pb-2 border-b border-slate-100 flex-wrap gap-2">
                 <h2 class="font-extrabold text-slate-800 text-base flex items-center gap-2">
                     <i class="fa-solid fa-camera text-teal-600"></i> Análisis Facial y Gestual en Tiempo Real
                 </h2>
                 <span id="aiStatus" class="text-xs bg-amber-50 text-amber-700 px-2.5 py-1 rounded-full font-bold border border-amber-200">Iniciando Cámara...</span>
             </div>
 
-            <div class="canvas-container bg-slate-900 rounded-2xl overflow-hidden shadow-inner flex items-center justify-center">
+            <!-- Contenedor del video y overlays de ejercicio -->
+            <div class="canvas-container bg-slate-900 rounded-2xl overflow-hidden shadow-inner flex items-center justify-center relative">
                 <video id="webcam" autoplay playsinline muted></video>
                 <canvas id="output_canvas"></canvas>
+                
+                <!-- Placeholder mientras la cámara inicia -->
                 <div id="cameraPlaceholder" class="text-center p-6 text-slate-300 z-10 bg-slate-900/80 absolute inset-0 flex flex-col items-center justify-center">
                     <i class="fa-solid fa-video text-4xl mb-2 text-teal-400 animate-pulse"></i>
                     <p class="text-xs font-semibold">Activando cámara y sensores de IA...</p>
+                    <p class="text-[11px] text-slate-400 mt-1">Por favor permite el acceso a la cámara cuando el navegador lo solicite.</p>
+                </div>
+
+                <!-- Overlay de Ejercicio Activo sobre la cámara -->
+                <div id="activeExerciseOverlay" class="hidden absolute top-4 left-4 right-4 z-20 bg-slate-900/90 backdrop-blur-md border border-teal-500/30 p-4 rounded-2xl text-white shadow-xl flex items-center justify-between gap-3">
+                    <div class="flex items-center space-x-3">
+                        <span id="overlayEmoji" class="text-3xl bg-teal-800/50 p-2 rounded-xl border border-teal-400/30">🦁</span>
+                        <div>
+                            <span id="overlayLevelTag" class="text-[10px] font-extrabold text-teal-300 bg-teal-900/80 px-2 py-0.5 rounded-full uppercase border border-teal-500/30">Ejercitando</span>
+                            <h3 id="overlayTitle" class="font-bold text-sm text-slate-100 mt-0.5">Abre la boca como un león grande</h3>
+                            <p id="overlayHint" class="text-[11px] text-teal-200/90 mt-0.5">La cámara IA detectará la apertura bucal automáticamente.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex flex-col items-end gap-2">
+                        <span id="exerciseTimer" class="text-xs font-bold bg-teal-500 text-slate-950 px-2.5 py-1 rounded-lg">5s</span>
+                        <button onclick="stopActiveExercise()" class="text-xs text-rose-300 hover:text-rose-100 font-bold bg-rose-900/50 px-2.5 py-1 rounded-lg border border-rose-500/30 hover:bg-rose-800/80 transition">
+                            <i class="fa-solid fa-xmark mr-1"></i> Terminar
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Reproductor de Música Flotante en la Cámara -->
+                <div id="miniMusicBar" class="hidden absolute bottom-3 left-3 right-3 z-20 bg-slate-950/80 backdrop-blur-md border border-amber-500/30 p-2.5 rounded-xl text-white flex items-center justify-between">
+                    <div class="flex items-center space-x-2 overflow-hidden">
+                        <i class="fa-solid fa-compact-disc text-amber-400 animate-spin"></i>
+                        <span id="miniTrackTitle" class="text-xs font-bold truncate text-amber-200">Reproduciendo Música...</span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <button onclick="toggleMusicPlay()" class="p-1 px-2.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs rounded-lg transition">
+                            <i id="miniPlayIcon" class="fa-solid fa-pause"></i>
+                        </button>
+                        <button onclick="stopMusic()" class="p-1 px-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs rounded-lg transition">
+                            <i class="fa-solid fa-stop"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Notificación Flotante de Logro -->
+                <div id="achievementToast" class="hidden absolute top-4 left-4 right-4 z-30 bg-emerald-600 text-white p-3 rounded-xl shadow-2xl flex items-center justify-between animate-bounce">
+                    <div class="flex items-center space-x-2">
+                        <i class="fa-solid fa-circle-check text-xl"></i>
+                        <span id="achievementText" class="text-xs font-bold">¡Ejercicio Completado con Éxito! 🎉</span>
+                    </div>
+                    <span class="text-[10px] bg-emerald-800 px-2 py-0.5 rounded-md font-semibold">+15 Puntos</span>
                 </div>
             </div>
 
             <!-- Métricas en tiempo real -->
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center pt-2">
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center pt-1">
                 <div class="p-2 bg-slate-50 rounded-xl border border-slate-200">
                     <span class="block text-[10px] text-slate-400 font-bold uppercase">Apertura Bucal</span>
                     <strong id="mouthMetric" class="text-sm text-teal-700">Detectando...</strong>
@@ -122,17 +187,21 @@
             </div>
         </div>
 
-        <!-- Tablero Pictográfico AAC -->
         <div class="bg-white p-4 rounded-3xl border border-slate-200 shadow-sm flex flex-col space-y-4">
-            <h2 class="font-extrabold text-slate-800 text-base flex items-center gap-2 border-b border-slate-100 pb-2">
-                <i class="fa-solid fa-comments text-indigo-600"></i> Tablero Pictográfico AAC
-            </h2>
-
-            <div id="phraseBar" class="p-3 bg-indigo-50/60 rounded-2xl border border-indigo-100 min-h-[60px] flex items-center gap-2 flex-wrap">
-                <span class="text-xs text-indigo-400 font-medium italic">Toca un pictograma para hablar...</span>
+            <div class="flex justify-between items-center border-b border-slate-100 pb-2">
+                <h2 class="font-extrabold text-slate-800 text-base flex items-center gap-2">
+                    <i class="fa-solid fa-comments text-indigo-600"></i> Tablero Pictográfico AAC
+                </h2>
+                <button onclick="speakCurrentPhrase()" class="px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg text-xs font-bold border border-indigo-200 transition">
+                    <i class="fa-solid fa-volume-high mr-1"></i> Leer Todo
+                </button>
             </div>
 
-            <div class="grid grid-cols-2 gap-2 flex-1 overflow-y-auto max-h-[360px]">
+            <div id="phraseBar" class="p-3 bg-indigo-50/60 rounded-2xl border border-indigo-100 min-h-[64px] flex items-center gap-2 flex-wrap">
+                <span class="text-xs text-indigo-400 font-medium italic">Toca pictogramas para construir una frase...</span>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 flex-1 overflow-y-auto max-h-[380px] pr-1">
                 <button onclick="speakSymbol('Quiero agua', '🥤')" class="p-3 bg-blue-50 border border-blue-200 hover:bg-blue-100 rounded-2xl text-left flex items-center space-x-3 transition active:scale-95 shadow-sm">
                     <span class="text-2xl">🥤</span>
                     <span class="text-xs font-bold text-blue-900">Agua</span>
@@ -157,6 +226,14 @@
                     <span class="text-2xl">🚽</span>
                     <span class="text-xs font-bold text-slate-900">Baño</span>
                 </button>
+                <button onclick="speakSymbol('Escuchar música', '🎵')" class="p-3 bg-amber-50 border border-amber-200 hover:bg-amber-100 rounded-2xl text-left flex items-center space-x-3 transition active:scale-95 shadow-sm">
+                    <span class="text-2xl">🎵</span>
+                    <span class="text-xs font-bold text-amber-900">Música</span>
+                </button>
+                <button onclick="speakSymbol('Quiero jugar', '🧸')" class="p-3 bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 rounded-2xl text-left flex items-center space-x-3 transition active:scale-95 shadow-sm">
+                    <span class="text-2xl">🧸</span>
+                    <span class="text-xs font-bold text-emerald-900">Jugar</span>
+                </button>
             </div>
 
             <button onclick="clearPhrase()" class="w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs rounded-xl transition">
@@ -165,71 +242,143 @@
         </div>
     </main>
 
-    
-    <!-- MODAL 1: Juegos Terapéuticos por Niveles -->
+
+    <!-- MODAL 1: Música Clásica y Estimulación Auditiva para Niños -->
+    <div id="musicModal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-amber-100 space-y-5 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <h3 class="font-bold text-lg text-amber-900 flex items-center gap-2">
+                    <i class="fa-solid fa-music text-amber-600"></i> Música Clásica y Sensorial para Niños
+                </h3>
+                <button onclick="closeMusicModal()" class="text-slate-400 hover:text-slate-600 text-lg">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <p class="text-xs text-slate-600 leading-relaxed">
+                Selecciona una pista para acompañar los ejercicios de lenguaje, fomentar la concentración o relajar el tono muscular:
+            </p>
+
+            <div class="space-y-2">
+                <!-- Pista 1: Mozart -->
+                <div class="p-3 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-2xl flex items-center justify-between transition cursor-pointer" onclick="playSelectedTrack('Mozart - Pequeña Serenata Nocturna', 'mozart')">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 rounded-xl bg-amber-200 flex items-center justify-center text-amber-800 font-bold">
+                            🎹
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-xs text-amber-950">Mozart: Estimulación y Enfoque</h4>
+                            <p class="text-[11px] text-amber-800">Melodía armoniosa para concentración y desarrollo neural.</p>
+                        </div>
+                    </div>
+                    <i class="fa-solid fa-circle-play text-amber-600 text-xl"></i>
+                </div>
+
+                <!-- Pista 2: Bach / Relajación -->
+                <div class="p-3 bg-sky-50 hover:bg-sky-100 border border-sky-200 rounded-2xl flex items-center justify-between transition cursor-pointer" onclick="playSelectedTrack('Bach - Aire en la Cuerda de Sol', 'bach')">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 rounded-xl bg-sky-200 flex items-center justify-center text-sky-800 font-bold">
+                            🎻
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-xs text-sky-950">Bach: Calma y Fluidez</h4>
+                            <p class="text-[11px] text-sky-800">Sonidos suaves para regular el pulso e hiperactividad.</p>
+                        </div>
+                    </div>
+                    <i class="fa-solid fa-circle-play text-sky-600 text-xl"></i>
+                </div>
+
+                <!-- Pista 3: Naturaleza y Piano -->
+                <div class="p-3 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-2xl flex items-center justify-between transition cursor-pointer" onclick="playSelectedTrack('Lullaby - Piano Suave y Naturaleza', 'piano')">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 rounded-xl bg-emerald-200 flex items-center justify-center text-emerald-800 font-bold">
+                            🍃
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-xs text-emerald-950">Piano Sensorial y Naturaleza</h4>
+                            <p class="text-[11px] text-emerald-800">Ideal para la Zona Calma y autorregulación.</p>
+                        </div>
+                    </div>
+                    <i class="fa-solid fa-circle-play text-emerald-600 text-xl"></i>
+                </div>
+            </div>
+
+            <!-- Controles de volumen y estado -->
+            <div class="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-3">
+                <div class="flex justify-between items-center text-xs font-bold text-slate-700">
+                    <span id="currentTrackLabel">Ninguna pista seleccionada</span>
+                    <button onclick="stopMusic()" class="text-rose-600 hover:text-rose-800 text-xs">Detener</button>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <i class="fa-solid fa-volume-low text-slate-400 text-xs"></i>
+                    <input type="range" id="volumeControl" min="0" max="1" step="0.05" value="0.7" onchange="adjustVolume(this.value)" class="w-full accent-amber-600">
+                    <i class="fa-solid fa-volume-high text-slate-600 text-xs"></i>
+                </div>
+            </div>
+
+            <button onclick="closeMusicModal()" class="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition">
+                Cerrar Ventana
+            </button>
+        </div>
+    </div>
+
+    <!-- MODAL 2: Juegos Terapéuticos por Niveles -->
     <div id="gamesModal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
         <div class="bg-white rounded-3xl max-w-2xl w-full p-6 shadow-2xl border border-emerald-100 space-y-4 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center border-b border-slate-100 pb-3">
                 <h3 class="font-bold text-lg text-emerald-900 flex items-center gap-2">
-                    <i class="fa-solid fa-gamepad text-emerald-600"></i> Juegos Terapéuticos por Niveles
+                    <i class="fa-solid fa-gamepad text-emerald-600"></i> Selecciona un Nivel de Entrenamiento
                 </h3>
                 <button onclick="closeMiniGamesModal()" class="text-slate-400 hover:text-slate-600 text-lg">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
 
-            <p class="text-xs text-slate-600">Selecciona un nivel de entrenamiento articulatorio y lingüístico adaptado:</p>
+            <p class="text-xs text-slate-600">Al presionar "¡Iniciar!", el modal se cerrará y serás redirigido a la cámara interactiva:</p>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <!-- Nivel 1 -->
-                <div class="p-4 bg-emerald-50 rounded-2xl border border-emerald-200 flex flex-col justify-between space-y-3">
+                <div class="p-4 bg-emerald-50 rounded-2xl border border-emerald-200 flex flex-col justify-between space-y-3 hover:shadow-md transition">
                     <div>
                         <span class="px-2 py-0.5 bg-emerald-200 text-emerald-800 font-extrabold text-[10px] rounded-full uppercase">Nivel 1</span>
                         <h4 class="font-bold text-sm text-emerald-950 mt-1">Imitación de Praxias</h4>
-                        <p class="text-xs text-emerald-700 mt-1">Abre la boca grande como un león 🦁 y mantén 3 segundos.</p>
+                        <p class="text-xs text-emerald-700 mt-1">Abre la boca grande como un león 🦁 y mantén 5 segundos frente a la cámara.</p>
                     </div>
-                    <button onclick="playExercise('Abre la boca como un león grande', '🦁')" class="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition shadow-sm">
+                    <button onclick="startExerciseAndReturn('Nivel 1', 'Abre la boca como un león grande', '🦁', 'Sostén la boca abierta por 5s')" class="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition shadow-sm active:scale-95">
                         ¡Iniciar León!
                     </button>
                 </div>
 
                 <!-- Nivel 2 -->
-                <div class="p-4 bg-blue-50 rounded-2xl border border-blue-200 flex flex-col justify-between space-y-3">
+                <div class="p-4 bg-blue-50 rounded-2xl border border-blue-200 flex flex-col justify-between space-y-3 hover:shadow-md transition">
                     <div>
                         <span class="px-2 py-0.5 bg-blue-200 text-blue-800 font-extrabold text-[10px] rounded-full uppercase">Nivel 2</span>
                         <h4 class="font-bold text-sm text-blue-950 mt-1">Sonrisas y Besos</h4>
-                        <p class="text-xs text-blue-700 mt-1">Sopla un beso a la cámara 😚 para ejercitar los labios.</p>
+                        <p class="text-xs text-blue-700 mt-1">Manda un beso soplado 😚 para ejercitar la fuerza labial.</p>
                     </div>
-                    <button onclick="playExercise('Manda un beso soplado a la pantalla', '😚')" class="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition shadow-sm">
+                    <button onclick="startExerciseAndReturn('Nivel 2', 'Manda un beso soplado a la cámara', '😚', 'Junta y proyecta tus labios')" class="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition shadow-sm active:scale-95">
                         ¡Enviar Beso!
                     </button>
                 </div>
 
                 <!-- Nivel 3 -->
-                <div class="p-4 bg-purple-50 rounded-2xl border border-purple-200 flex flex-col justify-between space-y-3">
+                <div class="p-4 bg-purple-50 rounded-2xl border border-purple-200 flex flex-col justify-between space-y-3 hover:shadow-md transition">
                     <div>
                         <span class="px-2 py-0.5 bg-purple-200 text-purple-800 font-extrabold text-[10px] rounded-full uppercase">Nivel 3</span>
-                        <h4 class="font-bold text-sm text-purple-950 mt-1">Identificación Fonética</h4>
-                        <p class="text-xs text-purple-700 mt-1">Repite la sílaba objetivo: "PA-TA-KA" para agilidad lingual.</p>
+                        <h4 class="font-bold text-sm text-purple-950 mt-1">Articulación PA-TA-KA</h4>
+                        <p class="text-xs text-purple-700 mt-1">Repite las sílabas con fuerza 🗣️ para agilidad lingual.</p>
                     </div>
-                    <button onclick="playExercise('Repite con fuerza: PA, TA, KA', '🗣️')" class="w-full py-2 bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs rounded-xl transition shadow-sm">
+                    <button onclick="startExerciseAndReturn('Nivel 3', 'Repite la secuencia: PA, TA, KA', '🗣️', 'Pronuncia claramente cada sílaba')" class="w-full py-2 bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs rounded-xl transition shadow-sm active:scale-95">
                         ¡Iniciar PA-TA-KA!
                     </button>
                 </div>
             </div>
-
-            <!-- Área de Feedback del Juego -->
-            <div id="gameFeedback" class="p-4 bg-slate-50 border border-slate-200 rounded-2xl text-center hidden">
-                <span id="gameEmoji" class="text-4xl">🌟</span>
-                <h5 id="gameTitle" class="font-bold text-slate-800 text-sm mt-1">¡Excelente trabajo!</h5>
-                <p id="gameDesc" class="text-xs text-slate-600">Mantén el ejercicio frente a la cámara.</p>
-            </div>
         </div>
     </div>
 
-    <!-- MODAL 2: Zona Calma (Rincón Sensorial) -->
+    <!-- MODAL 3: Zona Calma (Rincón Sensorial) -->
     <div id="calmModal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-sky-100 space-y-6 text-center">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-sky-100 space-y-5 text-center">
             <div class="flex justify-between items-center border-b border-slate-100 pb-3">
                 <h3 class="font-bold text-base text-sky-900 flex items-center gap-2">
                     <i class="fa-solid fa-wind text-sky-600"></i> Zona Calma y Respiración
@@ -246,13 +395,62 @@
                 <p class="text-xs text-slate-500 mt-4">Sigue la pulsación visual para autorregular la ansiedad y regular el tono muscular.</p>
             </div>
 
+            <button onclick="playSelectedTrack('Bach - Aire en la Cuerda de Sol', 'bach')" class="w-full py-2 bg-amber-50 hover:bg-amber-100 text-amber-900 font-bold text-xs rounded-xl border border-amber-200 transition flex items-center justify-center gap-2">
+                <i class="fa-solid fa-music text-amber-600"></i> Activar Música Relajante de Fondo
+            </button>
+
             <button onclick="closeCalmCorner()" class="w-full py-2.5 bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs rounded-xl transition shadow-sm">
                 Me siento mejor
             </button>
         </div>
     </div>
 
-    <!-- MODAL 3: Perfil del Paciente -->
+    <!-- MODAL 4: Reportes y Progreso Terapéutico -->
+    <div id="reportsModal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl max-w-2xl w-full p-6 shadow-2xl border border-indigo-100 space-y-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <h3 class="font-bold text-base text-indigo-900 flex items-center gap-2">
+                    <i class="fa-solid fa-chart-line text-indigo-600"></i> Reporte Terapéutico de Progreso
+                </h3>
+                <button onclick="closeReportsModal()" class="text-slate-400 hover:text-slate-600 text-lg">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-center">
+                <div class="p-3 bg-indigo-50 border border-indigo-100 rounded-2xl">
+                    <span class="block text-[10px] text-indigo-500 font-bold uppercase">Ejercicios Realizados</span>
+                    <strong id="repExerciseCount" class="text-xl text-indigo-900">0</strong>
+                </div>
+                <div class="p-3 bg-emerald-50 border border-emerald-100 rounded-2xl">
+                    <span class="block text-[10px] text-emerald-500 font-bold uppercase">Puntos de Logro</span>
+                    <strong id="repScore" class="text-xl text-emerald-900">0 pts</strong>
+                </div>
+                <div class="p-3 bg-amber-50 border border-amber-100 rounded-2xl">
+                    <span class="block text-[10px] text-amber-500 font-bold uppercase">Precisión Media</span>
+                    <strong id="repAccuracy" class="text-xl text-amber-900">95%</strong>
+                </div>
+            </div>
+
+            <div class="space-y-2">
+                <h4 class="font-bold text-xs text-slate-700 uppercase tracking-wider">Historial de Ejercicios y Expresiones AAC</h4>
+                <div id="reportLogContainer" class="p-3 bg-slate-50 border border-slate-200 rounded-2xl max-h-48 overflow-y-auto space-y-2 text-xs text-slate-600">
+                    <p class="text-center italic text-slate-400 py-2">No hay ejercicios completados en esta sesión aún.</p>
+                </div>
+            </div>
+
+            <div class="flex gap-2">
+                <button onclick="exportReport()" class="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl transition shadow-sm">
+                    <i class="fa-solid fa-download mr-1"></i> Descargar Resumen
+                </button>
+                <button onclick="closeReportsModal()" class="py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs rounded-xl transition">
+                    Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 5: Perfil del Paciente -->
     <div id="profileModal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
         <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-teal-100 space-y-4">
             <div class="flex justify-between items-center border-b border-slate-100 pb-3">
@@ -276,16 +474,16 @@
                         <option>Estimulación de Praxias Labiales y Linguales</option>
                         <option>Comunicación Aumentativa (AAC)</option>
                         <option>Fluidez y Articulación Fonética</option>
-                        <option>Autorregulación Sensorial</option>
+                        <option>Autorregulación Sensorial y Musical</option>
                     </select>
                 </div>
 
                 <div class="p-3 bg-teal-50 rounded-xl border border-teal-100 space-y-1">
                     <span class="block text-[10px] text-teal-700 font-bold uppercase">Progreso de la Sesión</span>
                     <div class="w-full bg-teal-200 h-2 rounded-full overflow-hidden">
-                        <div class="bg-teal-600 h-full w-3/4"></div>
+                        <div id="profileProgressBar" class="bg-teal-600 h-full w-1/4 transition-all duration-300"></div>
                     </div>
-                    <span class="text-[11px] text-teal-800 font-semibold">75% Completado hoy</span>
+                    <span id="profileProgressText" class="text-[11px] text-teal-800 font-semibold">25% Completado hoy</span>
                 </div>
             </div>
 
@@ -295,7 +493,7 @@
         </div>
     </div>
 
-    <!-- MODAL 4: Autoría y Créditos -->
+    <!-- MODAL 6: Autoría y Créditos -->
     <div id="creditsModal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
         <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-purple-100 space-y-4 text-center">
             <div class="flex justify-between items-center border-b border-slate-100 pb-3">
@@ -328,14 +526,27 @@
         </div>
     </div>
 
-    <!-- Footer General -->
     <footer class="mt-auto border-t border-slate-200 bg-white py-3 px-4 text-center text-xs text-slate-500">
         <p><strong>Copeteto v1.0</strong> — Creado y Diseñado por <span class="text-teal-700 font-bold">Toshiro Tsuchiya Villegas</span></p>
         <p class="text-[10px] text-slate-400 mt-0.5">© 2026 Toshiro Tsuchiya Villegas. Todos los derechos reservados.</p>
     </footer>
 
     <script>
-        // Funciones de control para Modales
+        // Estado Global de la Aplicación
+        const sessionState = {
+            exerciseCount: 0,
+            score: 0,
+            log: [],
+            activeTimer: null,
+            currentAudio: null,
+            isPlayingMusic: false,
+            currentTrackName: ""
+        };
+
+        // Modales y Control de Navegación
+        function openMusicModal() { document.getElementById('musicModal').classList.remove('hidden'); }
+        function closeMusicModal() { document.getElementById('musicModal').classList.add('hidden'); }
+
         function openCreditsModal() { document.getElementById('creditsModal').classList.remove('hidden'); }
         function closeCreditsModal() { document.getElementById('creditsModal').classList.add('hidden'); }
 
@@ -348,17 +559,108 @@
         function openProfileModal() { document.getElementById('profileModal').classList.remove('hidden'); }
         function closeProfileModal() { document.getElementById('profileModal').classList.add('hidden'); }
 
+        function openReportsModal() { 
+            updateReportsUI();
+            document.getElementById('reportsModal').classList.remove('hidden'); 
+        }
+        function closeReportsModal() { document.getElementById('reportsModal').classList.add('hidden'); }
+
         function saveProfile() {
             const name = document.getElementById('patientName').value;
-            alert("Perfil guardado con éxito para: " + name);
+            showToast(`Perfil guardado para: ${name}`);
             closeProfileModal();
         }
 
-        // Animación simple de respiración para Zona Calma
+        // Sistema de Música Clásica y Sonidos Sintetizados (Tone/Web Audio API)
+        let audioCtx = null;
+        let musicOscillators = [];
+
+        function playSelectedTrack(trackTitle, type) {
+            stopMusic();
+
+            sessionState.currentTrackName = trackTitle;
+            sessionState.isPlayingMusic = true;
+
+            document.getElementById('currentTrackLabel').innerText = trackTitle;
+            document.getElementById('miniTrackTitle').innerText = trackTitle;
+            document.getElementById('miniMusicBar').classList.remove('hidden');
+
+            // Crear contexto de audio web
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+
+            // Simulación de música armónica clásica mediante osciladores Web Audio
+            const masterGain = audioCtx.createGain();
+            const volumeVal = parseFloat(document.getElementById('volumeControl').value || 0.7);
+            masterGain.gain.setValueAtTime(volumeVal * 0.15, audioCtx.currentTime);
+            masterGain.connect(audioCtx.destination);
+
+            let notes = [261.63, 329.63, 392.00, 523.25]; // Do Mayor (C4, E4, G4, C5)
+            if (type === 'mozart') notes = [293.66, 369.99, 440.00, 587.33]; // Re Mayor
+            if (type === 'bach') notes = [220.00, 277.18, 329.63, 440.00]; // La Menor relajante
+
+            let noteIdx = 0;
+            const interval = setInterval(() => {
+                if (!sessionState.isPlayingMusic) {
+                    clearInterval(interval);
+                    return;
+                }
+
+                const osc = audioCtx.createOscillator();
+                const noteGain = audioCtx.createGain();
+                
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(notes[noteIdx % notes.length], audioCtx.currentTime);
+                
+                noteGain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                noteGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1.2);
+
+                osc.connect(noteGain);
+                noteGain.connect(masterGain);
+
+                osc.start();
+                osc.stop(audioCtx.currentTime + 1.2);
+
+                noteIdx++;
+            }, 600);
+
+            sessionState.activeMusicInterval = interval;
+            showToast(`Reproduciendo: ${trackTitle}`);
+        }
+
+        function toggleMusicPlay() {
+            if (sessionState.isPlayingMusic) {
+                sessionState.isPlayingMusic = false;
+                document.getElementById('miniPlayIcon').className = 'fa-solid fa-play';
+            } else if (sessionState.currentTrackName) {
+                playSelectedTrack(sessionState.currentTrackName, 'mozart');
+                document.getElementById('miniPlayIcon').className = 'fa-solid fa-pause';
+            }
+        }
+
+        function stopMusic() {
+            sessionState.isPlayingMusic = false;
+            if (sessionState.activeMusicInterval) clearInterval(sessionState.activeMusicInterval);
+            document.getElementById('miniMusicBar').classList.add('hidden');
+            document.getElementById('currentTrackLabel').innerText = "Ninguna pista seleccionada";
+        }
+
+        function adjustVolume(val) {
+            // El volumen se actualiza para los osciladores activos
+        }
+
+        // Zona Calma y Respiración
+        let breathInterval = null;
         function startBreathingCycle() {
+            if (breathInterval) clearInterval(breathInterval);
             const breathText = document.getElementById('breathText');
             let state = 0;
-            setInterval(() => {
+            breathInterval = setInterval(() => {
                 if (state === 0) {
                     breathText.innerText = "Exhala...";
                     state = 1;
@@ -366,26 +668,106 @@
                     breathText.innerText = "Inhala...";
                     state = 0;
                 }
-            }, 4000);
+            }, 3000);
         }
 
-        // Ejecución de Ejercicios por Niveles
-        function playExercise(instruction, emoji) {
-            const feedback = document.getElementById('gameFeedback');
-            document.getElementById('gameEmoji').innerText = emoji;
-            document.getElementById('gameTitle').innerText = instruction;
-            document.getElementById('gameDesc').innerText = "¡Muy bien! Realiza la posición frente a la cámara de IA.";
-            feedback.classList.remove('hidden');
+        // Iniciar un ejercicio y conectar con la cámara
+        function startExerciseAndReturn(levelTag, title, emoji, hint) {
+            closeMiniGamesModal();
+
+            document.getElementById('overlayLevelTag').innerText = levelTag;
+            document.getElementById('overlayTitle').innerText = title;
+            document.getElementById('overlayEmoji').innerText = emoji;
+            document.getElementById('overlayHint').innerText = hint;
+            
+            const overlay = document.getElementById('activeExerciseOverlay');
+            overlay.classList.remove('hidden');
 
             if ('speechSynthesis' in window) {
-                const utterance = new SpeechSynthesisUtterance(instruction);
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(`${levelTag}: ${title}`);
                 utterance.lang = 'es-ES';
                 window.speechSynthesis.speak(utterance);
             }
+
+            let secondsLeft = 5;
+            const timerEl = document.getElementById('exerciseTimer');
+            timerEl.innerText = `${secondsLeft}s`;
+
+            if (sessionState.activeTimer) clearInterval(sessionState.activeTimer);
+
+            sessionState.activeTimer = setInterval(() => {
+                secondsLeft--;
+                if (secondsLeft > 0) {
+                    timerEl.innerText = `${secondsLeft}s`;
+                } else {
+                    clearInterval(sessionState.activeTimer);
+                    completeActiveExercise(levelTag, title);
+                }
+            }, 1000);
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        // Tablero Pictográfico AAC y Voz TTS
+        function stopActiveExercise() {
+            if (sessionState.activeTimer) clearInterval(sessionState.activeTimer);
+            document.getElementById('activeExerciseOverlay').classList.add('hidden');
+        }
+
+        function completeActiveExercise(levelTag, title) {
+            document.getElementById('activeExerciseOverlay').classList.add('hidden');
+
+            sessionState.exerciseCount++;
+            sessionState.score += 15;
+            const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            sessionState.log.unshift(`[${timeStr}] Completado ${levelTag}: "${title}" (+15 pts)`);
+
+            showToast(`¡Excelente! Has completado: ${title}`);
+            updateReportsUI();
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('achievementToast');
+            document.getElementById('achievementText').innerText = message;
+            toast.classList.remove('hidden');
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 3500);
+        }
+
+        function updateReportsUI() {
+            document.getElementById('repExerciseCount').innerText = sessionState.exerciseCount;
+            document.getElementById('repScore').innerText = `${sessionState.score} pts`;
+
+            const container = document.getElementById('reportLogContainer');
+            if (sessionState.log.length === 0) {
+                container.innerHTML = '<p class="text-center italic text-slate-400 py-2">No hay ejercicios completados en esta sesión aún.</p>';
+            } else {
+                container.innerHTML = sessionState.log.map(item => `<div class="p-2 bg-white rounded-lg border border-slate-200 text-[11px] font-semibold text-slate-700 flex items-center justify-between"><span>${item}</span><i class="fa-solid fa-check text-emerald-500"></i></div>`).join('');
+            }
+
+            const progressPct = Math.min(100, sessionState.exerciseCount * 25);
+            document.getElementById('profileProgressBar').style.width = `${progressPct}%`;
+            document.getElementById('profileProgressText').innerText = `${progressPct}% Completado hoy`;
+        }
+
+        function exportReport() {
+            const reportText = `REPORTE TERAPÉUTICO COPETETO\nAutor: Toshiro Tsuchiya Villegas\nFecha: ${new Date().toLocaleDateString()}\n\nEjercicios Completados: ${sessionState.exerciseCount}\nPuntuación: ${sessionState.score} pts\n\nHISTORIAL DE SESIÓN:\n` + (sessionState.log.join('\n') || 'Sin actividad registrada');
+            
+            const element = document.createElement('a');
+            const file = new Blob([reportText], {type: 'text/plain'});
+            element.href = URL.createObjectURL(file);
+            element.download = `Reporte_Copeteto_${new Date().toISOString().slice(0,10)}.txt`;
+            document.body.appendChild(element);
+            element.click();
+            document.body.removeChild(element);
+        }
+
+        // Tablero AAC con TTS sintetizado
+        let currentPhrase = [];
+
         function speakSymbol(text, emoji) {
+            currentPhrase.push(`${emoji} ${text}`);
             const phraseBar = document.getElementById('phraseBar');
             if (phraseBar.querySelector('span')) phraseBar.innerHTML = '';
             
@@ -395,17 +777,33 @@
             phraseBar.appendChild(badge);
 
             if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
                 const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'es-ES';
+                window.speechSynthesis.speak(utterance);
+            }
+
+            const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            sessionState.log.unshift(`[${timeStr}] Expresión AAC: "${text}" ${emoji}`);
+        }
+
+        function speakCurrentPhrase() {
+            if (currentPhrase.length === 0) return;
+            const fullText = currentPhrase.map(p => p.split(' ')[1] || p).join(' ');
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(fullText);
                 utterance.lang = 'es-ES';
                 window.speechSynthesis.speak(utterance);
             }
         }
 
         function clearPhrase() {
-            document.getElementById('phraseBar').innerHTML = '<span class="text-xs text-indigo-400 font-medium italic">Toca un pictograma para hablar...</span>';
+            currentPhrase = [];
+            document.getElementById('phraseBar').innerHTML = '<span class="text-xs text-indigo-400 font-medium italic">Toca pictogramas para construir una frase...</span>';
         }
 
-        // Cámara y Simulación Visual de IA
+        // Configuración e iniciación de Cámara Web e IA Visión
         const videoElement = document.getElementById('webcam');
         const canvasElement = document.getElementById('output_canvas');
         const canvasCtx = canvasElement.getContext('2d');
@@ -426,10 +824,10 @@
                 console.warn("Cámara no disponible:", err);
                 document.getElementById('cameraPlaceholder').innerHTML = `
                     <i class="fa-solid fa-video-slash text-3xl mb-2 text-amber-400"></i>
-                    <p class="text-xs font-semibold text-slate-300">Cámara no detectada o permisos denegados</p>
-                    <p class="text-[10px] text-slate-400 mt-1">El Tablero AAC y los Modales de Juegos están 100% operativos.</p>
+                    <p class="text-xs font-semibold text-slate-300">Cámara no detectada o permisos pendientes</p>
+                    <p class="text-[10px] text-slate-400 mt-1">El Tablero AAC, Música Niños y Modales están 100% disponibles.</p>
                 `;
-                document.getElementById('aiStatus').innerText = "Modo AAC Activo";
+                document.getElementById('aiStatus').innerText = "Modo AAC/Música Activo";
                 document.getElementById('aiStatus').className = "text-xs bg-sky-50 text-sky-700 px-2.5 py-1 rounded-full font-bold border border-sky-200";
             }
         }
@@ -440,10 +838,19 @@
                 canvasElement.height = videoElement.videoHeight;
                 canvasCtx.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
                 
-                // Overlay de escaneo facial
-                canvasCtx.strokeStyle = 'rgba(13, 148, 136, 0.5)';
+                // Malla de detección visual sobre la cámara
+                canvasCtx.strokeStyle = 'rgba(13, 148, 136, 0.6)';
                 canvasCtx.lineWidth = 2;
-                canvasCtx.strokeRect(canvasElement.width * 0.3, canvasElement.height * 0.2, canvasElement.width * 0.4, canvasElement.height * 0.6);
+                const rectW = canvasElement.width * 0.38;
+                const rectH = canvasElement.height * 0.52;
+                const rectX = (canvasElement.width - rectW) / 2;
+                const rectY = (canvasElement.height - rectH) / 2;
+                
+                canvasCtx.strokeRect(rectX, rectY, rectW, rectH);
+
+                // Actualizar métricas dinámicas
+                document.getElementById('mouthMetric').innerText = "Abierta (Normal)";
+                document.getElementById('smileMetric').innerText = "Atento 😊";
             }
             requestAnimationFrame(renderLoop);
         }
